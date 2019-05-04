@@ -1,4 +1,4 @@
-var _ = require('underscore');
+var _ = require('lodash');
 
 const parseCookies = (req, res, next) => {
   let cookies = {};

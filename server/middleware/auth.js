@@ -8,11 +8,17 @@ module.exports.createSession = (req, res, next) => {
       .then(function(session) {
         if (session) {
           req.session = session;
+        } else {
+          models.Sessions.create(function(hash){
+            req.session = { hash: hash };
+            res.cookies = { shortlyid: { value: hash } };
+          });
         }
         next();
       })
       .catch(function(err) {
         console.log('------> WE HIT AN ERROR 1');
+
         next();
       });
   } else {

@@ -45,10 +45,16 @@ class Users extends Model {
     return super.create.call(this, newUser);
   }
 
-  get({username}){
-    let findUser = {
-      username: username,
-    };
+  get({ username, id }){
+    if (username){
+      var findUser = {
+        username: username
+      };
+    } else {
+      var findUser = {
+        id: id
+      };
+    }
     return super.get.call(this, findUser);
   }
 }

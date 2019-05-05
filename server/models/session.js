@@ -54,7 +54,7 @@ class Sessions extends Model {
     let data = utils.createRandom32String();
     let hash = utils.createHash(data);
 
-    if(callback){
+    if (callback) {
       callback(hash);
     }
 

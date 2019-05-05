@@ -11,7 +11,7 @@ module.exports.createSession = (req, res, next) => {
         } else {
           models.Sessions.create(function(hash){
             req.session = { hash: hash };
-            res.cookies = { shortlyid: { value: hash } };
+            res.cookie('shortlyid', hash);
           });
         }
         next();
@@ -24,7 +24,7 @@ module.exports.createSession = (req, res, next) => {
   } else {
     models.Sessions.create(function(hash) {
       req.session = { hash: hash };
-      res.cookies = { shortlyid: { value: hash } };
+      res.cookie('shortlyid', hash);
     })
       .then(function() {
         next();
@@ -40,3 +40,10 @@ module.exports.createSession = (req, res, next) => {
 // Add additional authentication middleware functions below
 /************************************************************/
 
+module.exports.verifySession = (req, res, next) => {
+  if(!models.Sessions.isLoggedIn(req.session)){
+    res.redirect('/login');
+  } else {
+    next();
+  }
+};

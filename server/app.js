@@ -21,17 +21,17 @@ app.use(Auth.createSession);
 
 
 
-app.get('/',
+app.get('/', Auth.verifySession,
   (req, res) => {
     res.render('index');
   });
 
-app.get('/create',
+app.get('/create', Auth.verifySession,
   (req, res) => {
     res.render('index');
   });
 
-app.get('/links',
+app.get('/links', Auth.verifySession,
   (req, res, next) => {
     models.Links.getAll()
       .then(links => {
@@ -42,7 +42,7 @@ app.get('/links',
       });
   });
 
-app.post('/links',
+app.post('/links', Auth.verifySession,
   (req, res, next) => {
     var url = req.body.url;
     if (!models.Links.isValidUrl(url)) {
@@ -82,51 +82,65 @@ app.post('/links',
 // LOGIN AND SIGNUP
 /************************************************************/
 
+app.get('/login', (req, res) => {
+  res.render('login');
+});
+
 app.post('/login', (req, res, next) => {
   models.Users.get({username: req.body.username})
     .then(function(user) {
       if (models.Users.compare(req.body.password, user.password, user.salt)){
-        let headers = {location: '/'};
-        res.writeHead(200, headers);
-        res.end();
+        console.log('--------ABOUT TO UPDATE SESSION:', req.session.hash,'USER ID:',user.id);
+        models.Sessions.update({ hash: req.session.hash}, { userId: user.id });
+        res.redirect('/');
       } else {
-        let headers = {location: '/login'};
-        res.writeHead(200, headers);
-        res.end();
+        res.status(500).send(err);
       }
     }).catch(function(err){
-      let headers = {location: '/login'};
-      res.writeHead(400, headers);
-      res.end();
+      res.redirect('/login');
     });
+});
 
+app.get('/signup', (req, res) => {
+  res.render('signup');
 });
 
 app.post('/signup', (req, res, next) => {
   models.Users.get({ username: req.body.username})
     .then(function(user){
       if(user){
-        let headers = {location: '/signup'};
-        res.writeHead(200, headers);
-        res.end();
+        res.redirect('/signup');
       } else {
         models.Users.create({ username: req.body.username, password: req.body.password})
-          .then(function(){
-            let headers = {location: '/'};
-            res.writeHead(200, headers);
+          .then(function(results){
+            res.redirect('/');
+            models.Sessions.update({ hash: req.session.hash}, { userId: results.insertId });
             console.log('successful addition');
-            res.end();
+            // res.end();
           })
           .catch(function(err){
-            console.log('Errored out creating a user');
-            res.writeHead(400);
-            res.write(JSON.stringify(err));
-            res.end();
+            // console.log('Errored out creating a user');
+            // res.writeHead(400);
+            // res.write(JSON.stringify(err));
+            res.redirect('/signup');
+            // res.end();
           });
       }
     });
 });
 
+app.get('/logout', (req, res, next) => {
+  models.Sessions.delete({ hash: req.session.hash })
+    .then(function() {
+      console.log('GOING INTO GET request for /logout');
+      res.clearCookie('shortlyId');
+      res.redirect('/');
+      next();
+    })
+    .catch(function(){
+      next();
+    });
+});
 /************************************************************/
 // Write your authentication routes here
 /************************************************************/

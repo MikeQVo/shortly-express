@@ -60,6 +60,7 @@ class Sessions extends Model {
 
     return super.create.call(this, { hash });
   }
+
 }
 
 module.exports = new Sessions();
